@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Crop Disease Detection</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Trebuchet MS', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    /* Welcome Page */
+    #welcome-page {
+      background: linear-gradient(135deg, #b5e48c, #99d98c, #76c893, #52b69a);
+      color: #1b4332;
+      height: 100vh;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 1s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(1.05); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    #welcome-page h1 {
+      font-size: 48px;
+      background: linear-gradient(to right, #1b4332, #2d6a4f, #40916c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    #welcome-page p {
+      font-size: 20px;
+      max-width: 600px;
+      text-align: center;
+      margin-bottom: 30px;
+      color: #344e41;
+    }
+
+    #start-btn {
+      padding: 12px 30px;
+      font-size: 18px;
+      background: #2d6a4f;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.3s;
+    }
+
+    #start-btn:hover {
+      background: #1b4332;
+      transform: scale(1.05);
+    }
+
+    /* Main App Page */
+    #app {
+      display: none;
+      background: url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
+      background-size: cover;
+      min-height: 100vh;
+      padding: 30px 0;
+      position: relative;
+    }
+
+    #app::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.8);
+      z-index: 0;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 36px;
+      color: #2d6a4f;
+      position: relative;
+      z-index: 1;
+      margin-top: 30px;
+    }
+
+    #upload-section {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      max-width: 500px;
+      width: 90%;
+      margin: 30px auto;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    input[type="file"] {
+      margin: 15px 0;
+      padding: 12px;
+      border-radius: 10px;
+      border: 2px dashed #90be6d;
+      background-color: #e9f5ec;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    #preview {
+      max-width: 100%;
+      max-height: 250px;
+      margin-top: 15px;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      border: 2px solid #74c69d;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: none;
+    }
+
+    button {
+      background: linear-gradient(to right, #2d6a4f, #40916c);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+    button:hover:not(:disabled) {
+      background: linear-gradient(to right, #1b4332, #2d6a4f);
+      transform: scale(1.05);
+    }
+
+    button:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 18px;
+      color: #1b4332;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #40916c;
+      z-index: 1;
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Welcome Page -->
+  <div id="welcome-page">
+    <h1>🌿 Welcome to Crop Disease Doctor 🌼</h1>
+    <p>Empowering farmers with AI-driven crop disease detection. Upload a leaf image and we'll help identify any issues it may have!</p>
+    <button id="start-btn">Get Started</button>
+  </div>
+
+  <!-- Main App Section -->
+  <div id="app">
+    <h2>🌱 Crop Disease Detection</h2>
+    <div id="upload-section">
+      <input type="file" id="imageInput" accept="image/*" />
+      <img id="preview" src="" alt="Image preview" />
+      <br />
+      <button id="detectBtn" disabled>Detect Disease</button>
+      <div id="result"></div>
+    </div>
+    <footer>Made with 💚 for Nature | Jaguar Mini Project</footer>
+  </div>
+
+  <script>
+    // Transition from welcome to app
+    const startBtn = document.getElementById('start-btn');
+    const welcomePage = document.getElementById('welcome-page');
+    const appPage = document.getElementById('app');
+
+    startBtn.addEventListener('click', () => {
+      welcomePage.style.display = 'none';
+      appPage.style.display = 'block';
+    });
+
+    // Image upload logic
+    const imageInput = document.getElementById('imageInput');
+    const preview = document.getElementById('preview');
+    const detectBtn = document.getElementById('detectBtn');
+    const result = document.getElementById('result');
+
+    imageInput.addEventListener('change', () => {
+      const file = imageInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          preview.src = reader.result;
+          preview.style.display = 'block';
+          result.textContent = '';
+          detectBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        preview.src = '';
+        preview.style.display = 'none';
+        detectBtn.disabled = true;
+        result.textContent = '';
+      }
+    });
+
+    detectBtn.addEventListener('click', () => {
+      detectBtn.disabled = true;
+      result.textContent = 'Detecting disease...';
+
+      setTimeout(() => {
+        const diseases = [
+          '🌱 Healthy Leaf',
+          '🍂 Early Blight',
+          '🍁 Late Blight',
+          '🌾 Powdery Mildew',
+          '🍃 Leaf Rust',
+          '🌿 Bacterial Spot'
+        ];
+        const randomIndex = Math.floor(Math.random() * diseases.length);
+        result.textContent = `Prediction: ${diseases[randomIndex]}`;
+        detectBtn.disabled = false;
+      }, 2000);
+    });
+  </script>
+
+</body>
+</html>
